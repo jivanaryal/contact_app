@@ -1,6 +1,7 @@
 import 'package:contact_app/models/contact_model.dart';
 import 'package:contact_app/models/lat_lng_model.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,6 +31,8 @@ class _HomePageState extends State<HomePage> {
             "https://images.pexels.com/photos/1391498/pexels-photo-1391498.jpeg?auto=compress&cs=tinysrgb&w=600",
         position: LatLngModel(latitude: 27.6866, longitude: 82.4323)),
   ];
+
+  final ImagePicker picker = ImagePicker();
   @override
   Widget build(BuildContext context) {
     double deviceHeight = MediaQuery.sizeOf(context).height;
@@ -83,7 +86,13 @@ class _HomePageState extends State<HomePage> {
                                       border: Border.all(
                                           color: Colors.black, width: 2)),
                                   child: IconButton(
-                                      onPressed: () {},
+                                      onPressed: () async {
+                                        XFile? pickedImage =
+                                            await picker.pickImage(
+                                                source: ImageSource.camera);
+
+                                        print(pickedImage!.path);
+                                      },
                                       icon: Icon(Icons.add_a_photo)),
                                 ),
                                 Padding(
