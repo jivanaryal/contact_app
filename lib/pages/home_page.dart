@@ -32,6 +32,9 @@ class _HomePageState extends State<HomePage> {
   ];
   @override
   Widget build(BuildContext context) {
+    double deviceHeight = MediaQuery.sizeOf(context).height;
+    double deviceWidth = MediaQuery.sizeOf(context).width;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
@@ -48,10 +51,14 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 showModalBottomSheet(
                     // isDismissible: false,
+                    isScrollControlled:
+                        true, //this is used to scroll the container with swiping
                     context: context,
-                    builder: (_) => BottomSheet(
-                        onClosing: () {},
-                        builder: (_) => Column(
+                    builder: (_) => Padding(
+                          padding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).viewInsets.bottom),
+                          child: SingleChildScrollView(
+                            child: Column(
                               children: [
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
@@ -70,13 +77,49 @@ class _HomePageState extends State<HomePage> {
                                 Container(
                                   height: 100,
                                   width: 90,
+                                  margin: EdgeInsets.only(top: 10),
                                   decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(13),
                                       border: Border.all(
                                           color: Colors.black, width: 2)),
-                                )
+                                  child: IconButton(
+                                      onPressed: () {},
+                                      icon: Icon(Icons.add_a_photo)),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: deviceWidth * 0.15),
+                                  child: TextFormField(
+                                    keyboardType: TextInputType.text,
+                                    decoration:
+                                        InputDecoration(labelText: "Full Name"),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: deviceWidth * 0.15),
+                                  child: TextFormField(
+                                    keyboardType: TextInputType.text,
+                                    decoration:
+                                        InputDecoration(labelText: "Phone"),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: deviceWidth * 0.15),
+                                  child: TextFormField(
+                                    keyboardType: TextInputType.text,
+                                    decoration:
+                                        InputDecoration(labelText: "Address"),
+                                  ),
+                                ),
+                                ElevatedButton(
+                                    onPressed: () {},
+                                    child: Text("add contact"))
                               ],
-                            )));
+                            ),
+                          ),
+                        ));
               },
               icon: Icon(
                 Icons.add,
