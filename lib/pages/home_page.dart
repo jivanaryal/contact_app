@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:contact_app/models/contact_model.dart';
 import 'package:contact_app/models/lat_lng_model.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,28 +13,40 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<ContactModel> contacts = [
-    ContactModel(
-        name: "jivan aryal",
-        phoneNumber: "9844707947",
-        image:
-            "https://images.pexels.com/photos/1391498/pexels-photo-1391498.jpeg?auto=compress&cs=tinysrgb&w=600",
-        position: LatLngModel(latitude: 27.6866, longitude: 82.4323)),
-    ContactModel(
-        name: "himal fullel",
-        phoneNumber: "9867398339",
-        image:
-            "https://images.pexels.com/photos/1391498/pexels-photo-1391498.jpeg?auto=compress&cs=tinysrgb&w=600",
-        position: LatLngModel(latitude: 27.6866, longitude: 82.4323)),
-    ContactModel(
-        name: "manoj belbase",
-        phoneNumber: "9823847399",
-        image:
-            "https://images.pexels.com/photos/1391498/pexels-photo-1391498.jpeg?auto=compress&cs=tinysrgb&w=600",
-        position: LatLngModel(latitude: 27.6866, longitude: 82.4323)),
-  ];
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    await launchUrl(launchUri);
+  }
+
+  List<ContactModel> contacts = [];
 
   final ImagePicker picker = ImagePicker();
+  File? image;
+  TextEditingController fullNameController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
+
+  clearField() {
+    image = null;
+    fullNameController.clear();
+    phoneController.clear();
+  }
+
+  selectAImage(ImageSource source, Function(void Function()) setState) async {
+    try {
+      Navigator.of(context).pop();
+      XFile? pickedImage = await picker.pickImage(source: source);
+
+      setState(() {
+        image = File(pickedImage!.path);
+      });
+    } catch (err) {
+      // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: ))
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double deviceHeight = MediaQuery.sizeOf(context).height;
@@ -53,82 +67,137 @@ class _HomePageState extends State<HomePage> {
           IconButton(
               onPressed: () {
                 showModalBottomSheet(
-                    // isDismissible: false,
-                    isScrollControlled:
-                        true, //this is used to scroll the container with swiping
+                    isScrollControlled: true,
                     context: context,
-                    builder: (_) => Padding(
-                          padding: EdgeInsets.only(
-                              bottom: MediaQuery.of(context).viewInsets.bottom),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    IconButton(
-                                        onPressed: () {},
-                                        icon: Icon(Icons.close))
-                                  ],
-                                ),
-                                Text(
-                                  "Add Contact",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 30),
-                                ),
-                                Container(
-                                  height: 100,
-                                  width: 90,
-                                  margin: EdgeInsets.only(top: 10),
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(13),
-                                      border: Border.all(
-                                          color: Colors.black, width: 2)),
-                                  child: IconButton(
-                                      onPressed: () async {
-                                        XFile? pickedImage =
-                                            await picker.pickImage(
-                                                source: ImageSource.camera);
-
-                                        print(pickedImage!.path);
-                                      },
-                                      icon: Icon(Icons.add_a_photo)),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: deviceWidth * 0.15),
-                                  child: TextFormField(
-                                    keyboardType: TextInputType.text,
-                                    decoration:
-                                        InputDecoration(labelText: "Full Name"),
+                    builder:
+                        (_) => StatefulBuilder(builder: (context, setState) {
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                    bottom: MediaQuery.of(context)
+                                        .viewInsets
+                                        .bottom),
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          IconButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                              icon: Icon(Icons.close))
+                                        ],
+                                      ),
+                                      const Text(
+                                        "Add Contact",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 30),
+                                      ),
+                                      Container(
+                                        height: 100,
+                                        width: 90,
+                                        margin: EdgeInsets.only(top: 10),
+                                        decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(13),
+                                            border: Border.all(
+                                                color: Colors.black, width: 2)),
+                                        child: image == null
+                                            ? IconButton(
+                                                onPressed: () async {
+                                                  clearField();
+                                                  showDialog(
+                                                      context: context,
+                                                      builder:
+                                                          (_) => AlertDialog(
+                                                                title: Text(
+                                                                    "choose a source"),
+                                                                content: Text(
+                                                                    "camera or gallery"),
+                                                                actions: [
+                                                                  TextButton.icon(
+                                                                      onPressed: () {
+                                                                        selectAImage(
+                                                                            ImageSource.camera,
+                                                                            setState);
+                                                                      },
+                                                                      icon: Icon(Icons.camera),
+                                                                      label: Text("camera")),
+                                                                  TextButton.icon(
+                                                                      onPressed: () {
+                                                                        selectAImage(
+                                                                            ImageSource.gallery,
+                                                                            setState);
+                                                                      },
+                                                                      icon: Icon(Icons.image),
+                                                                      label: Text("gallery"))
+                                                                ],
+                                                              ));
+                                                },
+                                                icon: Icon(Icons.add_a_photo))
+                                            : Image.file(image!),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: deviceWidth * 0.15),
+                                        child: TextFormField(
+                                          keyboardType: TextInputType.text,
+                                          controller: fullNameController,
+                                          decoration: InputDecoration(
+                                              labelText: "Full Name"),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: deviceWidth * 0.15),
+                                        child: TextFormField(
+                                          keyboardType: TextInputType.text,
+                                          controller: phoneController,
+                                          decoration: InputDecoration(
+                                              labelText: "Phone"),
+                                        ),
+                                      ),
+                                      ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                            this.setState(() {
+                                              contacts.add(ContactModel(
+                                                  name: fullNameController.text,
+                                                  phoneNumber:
+                                                      phoneController.text,
+                                                  image: image,
+                                                  position: LatLngModel(
+                                                      latitude: 112.33,
+                                                      longitude: 23.221)));
+                                            });
+                                            clearField();
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(SnackBar(
+                                              backgroundColor: Colors.green,
+                                              content: Text(
+                                                "contact added",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ));
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(SnackBar(
+                                                    content: Text(
+                                                        "Contact Added",
+                                                        style: TextStyle(
+                                                            color: Colors
+                                                                .white))));
+                                          },
+                                          child: Text("add contact"))
+                                    ],
                                   ),
                                 ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: deviceWidth * 0.15),
-                                  child: TextFormField(
-                                    keyboardType: TextInputType.text,
-                                    decoration:
-                                        InputDecoration(labelText: "Phone"),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: deviceWidth * 0.15),
-                                  child: TextFormField(
-                                    keyboardType: TextInputType.text,
-                                    decoration:
-                                        InputDecoration(labelText: "Address"),
-                                  ),
-                                ),
-                                ElevatedButton(
-                                    onPressed: () {},
-                                    child: Text("add contact"))
-                              ],
-                            ),
-                          ),
-                        ));
+                              );
+                            }));
               },
               icon: Icon(
                 Icons.add,
@@ -150,15 +219,19 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.blue),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(50),
-                  child: Image.network(
-                    contacts[index].image,
-                    fit: BoxFit.cover,
-                  ),
+                  child: contacts[index].image == null
+                      ? Icon(Icons.person)
+                      : Image.file(
+                          contacts[index].image!,
+                          fit: BoxFit.cover,
+                        ),
                 )),
             title: Text(contacts[index].name),
             subtitle: Text("98446079483"),
             trailing: IconButton(
-              onPressed: () {},
+              onPressed: () {
+                _makePhoneCall("9844707947");
+              },
               icon: Icon(Icons.phone),
             ),
           );
